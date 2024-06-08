@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Ordens de Serviço - Eletrônica Oliveira</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Criar Nova Ordem de Serviço</h1>
+    <h1>Eletrônica Oliveira</h1>
+    <form id="formOS">
+        <label for="numeroOS">Número da OS:</label>
+        <input type="text" id="numeroOS" name="numeroOS" required><br>
+
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" name="nome" required><br>
+
+        <label for="endereco">Endereço:</label>
+        <input type="text" id="endereco" name="endereco"><br>
+
+        <label for="telefone">Telefone:</label>
+        <input type="tel" id="telefone" name="telefone" required><br>
+
+        <label for="aparelho">Aparelho:</label>
+        <input type="text" id="aparelho" name="aparelho" required><br>
+
+        <label for="defeito">Defeito:</label>
+        <textarea id="defeito" name="defeito" rows="4" required></textarea><br>
+
+        <label for="pecas">Peças para troca:</label>
+        <input type="text" id="pecas" name="pecas"><br>
+
+        <label for="preco">Preço:</label>
+        <input type="number" id="preco" name="preco"><br>
+
+        <button type="submit">Salvar Ordem de Serviço</button>
+    </form>
+
+    <table id="tabelaOS">
+        <caption>Ordens de Serviço</caption>
+        <thead>
+            <tr>
+                <th>Número OS</th>
+                <th>Nome</th>
+                <th>Telefone</th>
+                <th>Aparelho</th>
+                <th>Defeito</th>
+                <th>Peças para troca</th>
+                <th>Preço</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Aqui serão adicionadas as linhas da tabela dinamicamente -->
+        </tbody>
+    </table>
+
+    <script src="script.js"></script>
+</body>
+</html>
