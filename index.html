@@ -8,7 +8,6 @@
 </head>
 <body>
     <h1>Criar Nova Ordem de Serviço</h1>
-    <h1>Eletrônica Oliveira</h1>
     <form id="formOS">
         <label for="numeroOS">Número da OS:</label>
         <input type="text" id="numeroOS" name="numeroOS" required><br>
@@ -37,6 +36,9 @@
         <button type="submit">Salvar Ordem de Serviço</button>
     </form>
 
+    <h2>Ordens de Serviço</h2>
+    <input type="text" id="pesquisa" placeholder="Pesquisar ordens de serviço">
+
     <table id="tabelaOS">
         <caption>Ordens de Serviço</caption>
         <thead>
@@ -48,6 +50,7 @@
                 <th>Defeito</th>
                 <th>Peças para troca</th>
                 <th>Preço</th>
+                <th>Ações</th>
             </tr>
         </thead>
         <tbody>

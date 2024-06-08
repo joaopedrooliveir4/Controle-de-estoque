@@ -1,12 +1,13 @@
 document.addEventListener('DOMContentLoaded', function() {
     const formOS = document.getElementById('formOS');
     const tabelaOS = document.getElementById('tabelaOS').getElementsByTagName('tbody')[0];
+    const inputPesquisa = document.getElementById('pesquisa');
     let ordensServico = [];
 
     // Verifica se já existem dados salvos no localStorage
     if (localStorage.getItem('ordensServico')) {
         ordensServico = JSON.parse(localStorage.getItem('ordensServico'));
-        atualizarTabela();
+        atualizarTabela(ordensServico);
     }
 
     formOS.addEventListener('submit', function(event) {
@@ -37,15 +38,28 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('ordensServico', JSON.stringify(ordensServico));
 
         // Atualiza a tabela
-        atualizarTabela();
+        atualizarTabela(ordensServico);
 
         formOS.reset();
     });
 
+    inputPesquisa.addEventListener('input', function() {
+        const filtro = inputPesquisa.value.toLowerCase();
+        const ordensFiltradas = ordensServico.filter(ordem => 
+            ordem.numeroOS.toLowerCase().includes(filtro) ||
+            ordem.nome.toLowerCase().includes(filtro) ||
+            ordem.telefone.toLowerCase().includes(filtro) ||
+            ordem.aparelho.toLowerCase().includes(filtro) ||
+            ordem.defeito.toLowerCase().includes(filtro) ||
+            ordem.pecas.toLowerCase().includes(filtro)
+        );
+        atualizarTabela(ordensFiltradas);
+    });
+
     // Função para atualizar a tabela com os dados salvos
-    function atualizarTabela() {
+    function atualizarTabela(ordens) {
         tabelaOS.innerHTML = '';
-        ordensServico.forEach(function(ordem, index) {
+        ordens.forEach(function(ordem, index) {
             const newRow = tabelaOS.insertRow();
             const cells = [
                 newRow.insertCell(0),
@@ -80,6 +94,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function apagarOrdemServico(index) {
         ordensServico.splice(index, 1);
         localStorage.setItem('ordensServico', JSON.stringify(ordensServico));
-        atualizarTabela();
+        atualizarTabela(ordensServico);
     }
 });
