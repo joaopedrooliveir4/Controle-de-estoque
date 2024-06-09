@@ -2,24 +2,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const formOS = document.getElementById('formOS');
     const tabelaOS = document.getElementById('tabelaOS').getElementsByTagName('tbody')[0];
     const inputPesquisa = document.getElementById('pesquisa');
-    let ordemEmEdicaoId = null;
+    let ordensServico = [];
+    let ordemEmEdicaoIndex = null;
 
-    // Carrega ordens de serviço do Firestore
-    function carregarOrdensServico() {
-        db.collection('ordensServico').get().then(querySnapshot => {
-            const ordensServico = [];
-            querySnapshot.forEach(doc => {
-                ordensServico.push({ id: doc.id, ...doc.data() });
-            });
-            atualizarTabela(ordensServico);
-        });
+    // Verifica se já existem dados salvos no localStorage
+    if (localStorage.getItem('ordensServico')) {
+        ordensServico = JSON.parse(localStorage.getItem('ordensServico'));
+        atualizarTabela(ordensServico);
     }
+
+    // Obtém o último número de OS salvo no localStorage
+    let ultimoNumeroOS = localStorage.getItem('ultimoNumeroOS') ? parseInt(localStorage.getItem('ultimoNumeroOS')) : 0;
 
     formOS.addEventListener('submit', function(event) {
         event.preventDefault();
 
         const novaOS = {
-            numeroOS: formOS.numeroOS.value || Date.now().toString(), // Usa timestamp se não houver número
+            numeroOS: ordemEmEdicaoIndex !== null ? formOS.numeroOS.value : ++ultimoNumeroOS,
             nome: formOS.nome.value,
             endereco: formOS.endereco.value,
             telefone: formOS.telefone.value,
@@ -29,42 +28,41 @@ document.addEventListener('DOMContentLoaded', function() {
             preco: formOS.preco.value
         };
 
-        if (ordemEmEdicaoId) {
-            db.collection('ordensServico').doc(ordemEmEdicaoId).set(novaOS).then(() => {
-                carregarOrdensServico();
-                ordemEmEdicaoId = null;
-                formOS.reset();
-            });
+        if (ordemEmEdicaoIndex !== null) {
+            ordensServico[ordemEmEdicaoIndex] = novaOS;
+            ordemEmEdicaoIndex = null;
         } else {
-            db.collection('ordensServico').add(novaOS).then(() => {
-                carregarOrdensServico();
-                formOS.reset();
-            });
+            ordensServico.push(novaOS);
+            // Atualiza o último número de OS no localStorage
+            localStorage.setItem('ultimoNumeroOS', ultimoNumeroOS);
         }
+
+        // Salva os dados no localStorage
+        localStorage.setItem('ordensServico', JSON.stringify(ordensServico));
+
+        // Atualiza a tabela
+        atualizarTabela(ordensServico);
+
+        formOS.reset();
     });
 
     inputPesquisa.addEventListener('input', function() {
         const filtro = inputPesquisa.value.toLowerCase();
-        db.collection('ordensServico').get().then(querySnapshot => {
-            const ordensFiltradas = [];
-            querySnapshot.forEach(doc => {
-                const ordem = { id: doc.id, ...doc.data() };
-                if (ordem.numeroOS.toLowerCase().includes(filtro) ||
-                    ordem.nome.toLowerCase().includes(filtro) ||
-                    ordem.telefone.toLowerCase().includes(filtro) ||
-                    ordem.aparelho.toLowerCase().includes(filtro) ||
-                    ordem.defeito.toLowerCase().includes(filtro) ||
-                    ordem.pecas.toLowerCase().includes(filtro)) {
-                    ordensFiltradas.push(ordem);
-                }
-            });
-            atualizarTabela(ordensFiltradas);
-        });
+        const ordensFiltradas = ordensServico.filter(ordem => 
+            ordem.numeroOS.toString().toLowerCase().includes(filtro) ||
+            ordem.nome.toLowerCase().includes(filtro) ||
+            ordem.telefone.toLowerCase().includes(filtro) ||
+            ordem.aparelho.toLowerCase().includes(filtro) ||
+            ordem.defeito.toLowerCase().includes(filtro) ||
+            ordem.pecas.toLowerCase().includes(filtro)
+        );
+        atualizarTabela(ordensFiltradas);
     });
 
+    // Função para atualizar a tabela com os dados salvos
     function atualizarTabela(ordens) {
         tabelaOS.innerHTML = '';
-        ordens.forEach(function(ordem) {
+        ordens.forEach(function(ordem, index) {
             const newRow = tabelaOS.insertRow();
             newRow.innerHTML = `
                 <td>${ordem.numeroOS}</td>
@@ -81,10 +79,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 </td>
             `;
             newRow.querySelector('.btnEditar').addEventListener('click', function() {
-                editarOrdemServico(ordem);
+                editarOrdemServico(index);
             });
             newRow.querySelector('.btnApagar').addEventListener('click', function() {
-                apagarOrdemServico(ordem.id);
+                apagarOrdemServico(index);
             });
             newRow.querySelector('.btnBaixarPDF').addEventListener('click', function() {
                 baixarPDF(ordem);
@@ -92,7 +90,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function editarOrdemServico(ordem) {
+    // Função para carregar os dados da ordem de serviço no formulário para edição
+    function editarOrdemServico(index) {
+        const ordem = ordensServico[index];
         formOS.numeroOS.value = ordem.numeroOS;
         formOS.nome.value = ordem.nome;
         formOS.endereco.value = ordem.endereco;
@@ -102,15 +102,17 @@ document.addEventListener('DOMContentLoaded', function() {
         formOS.pecas.value = ordem.pecas;
         formOS.preco.value = ordem.preco;
 
-        ordemEmEdicaoId = ordem.id;
+        ordemEmEdicaoIndex = index;
     }
 
-    function apagarOrdemServico(id) {
-        db.collection('ordensServico').doc(id).delete().then(() => {
-            carregarOrdensServico();
-        });
+    // Função para apagar uma ordem de serviço específica
+    function apagarOrdemServico(index) {
+        ordensServico.splice(index, 1);
+        localStorage.setItem('ordensServico', JSON.stringify(ordensServico));
+        atualizarTabela(ordensServico);
     }
 
+    // Função para baixar a ordem de serviço como PDF
     function baixarPDF(ordem) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -162,24 +164,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
         doc.save(`Ordem_de_Servico_${ordem.numeroOS}.pdf`);
     }
-
-    // Carrega as ordens de serviço ao carregar a página
-    carregarOrdensServico();
 });
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
-  };
-  
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  
-  // Initialize Firestore
-  const db = firebase.firestore();
-  
